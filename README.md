@@ -28,12 +28,13 @@ La propuesta para poder afrontar los requerimientos mencionados anteriormente, e
 - Configurar EventBridge con una Lambda. Entonces al invocar la función la misma lee todos los registros en estado `pending` desde la base de datos.
 - Por cada registro, se envía un mensaje a una cola SQS del tipo FIFO. Este tipo de queue nos facilita la unicidad de mensajes, entonces podemos usar el provider como unico (MessageGroupId = provider_id).
 - Procesamos los mensajes de la queue con otra Lambda, la cual realiza la request a la API, y evaluan el resultado.
-    - Si la respuesta de la API tiene errores, esta Lambda evalua si son recuperables para reintentar el mismo mensaje.
-    - En los casos de que la respuesta sea exitosa o retorne un error irrecuperable, se postea un mensaje en un tópico de SNS.
+    - Si la API falla, debemos evaluar el error recibido.
+    - Si el error es transitorio (timeout red, error 5xx del sistema), la Lambda puede reintentar internamente (exponential backoff) antes de fallar en serio.
+    - Si el limite de reintentos es superado, es un error "irrecuperable" y el mensaje es enviado a una Dead Letter Queue.
+    - Si obtenemos una respuesta exitosa de la API se postea un mensaje en un tópico de SNS.
 - Los mensajes que se postean al SNS son encolados en SQS y procesados por otra Lambda.
 - Esta Lambda evalua el tipo de mensaje:
     - Si es exitoso, actualiza el registro en la base de datos cambiando su estado a `success` por ejemplo.
     - Además, almacena el resultado en otra base de datos.
-    - Si por el contrario el mensaje es de error, postea el mismo en una Dead Letter Queue.
 
 ![alt text](/images/diagram-1.png "Proposal")
