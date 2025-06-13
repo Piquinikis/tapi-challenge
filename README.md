@@ -37,4 +37,4 @@ La propuesta para poder afrontar los requerimientos mencionados anteriormente, e
     - Si es exitoso, actualiza el registro en la base de datos cambiando su estado a `success` por ejemplo.
     - Además, almacena el resultado en otra base de datos.
 
-![alt text](/images/diagram-1.png "Proposal")
+![alt text](images/Untitled-2024-09-18-1013.png)
